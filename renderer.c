@@ -5,6 +5,7 @@
 #include "renderer.h"
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <bits/signum-generic.h>
 #include <cglm/cglm.h>
@@ -21,11 +22,36 @@ ivec2 viewport = {0, 0};
 unsigned int VBO = 0;
 unsigned int EBO = 0;
 unsigned int shaderProgram = 0;
-GLuint texture = 0;
+GLuint albedo_texture = 0;
+GLuint overlay_texture = 0;
 Model* shork = NULL;
 mat4* modelViewProjectionMatrix = NULL;
 
-bool eglInit(const ivec2 size)
+bool eglLoadTexture(const char* path, GLuint *texture, const bool filter)
+{
+    Image* img = readImage(path);
+    if (img == NULL)
+    {
+        fprintf(stderr, "Failed to load texture\n");
+        return false;
+    }
+
+    glGenTextures(1, texture);
+    glBindTexture(GL_TEXTURE_2D, *texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img->width, img->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 img->data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter ? GL_LINEAR : GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter ? GL_LINEAR : GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    free(img->data);
+    free(img);
+
+    return true;
+}
+
+bool eglInit(const ivec2 size, const char* overlayTexture)
 {
     viewport[0] = size[0];
     viewport[1] = size[1] * 2;
@@ -94,11 +120,6 @@ bool eglInit(const ivec2 size)
         return false;
     }
 
-    const char* renderer = (const char*)glGetString(GL_RENDERER);
-    const char* version = (const char*)glGetString(GL_VERSION);
-    printf("Renderer: %s\n", renderer);
-    printf("OpenGL version: %s\n", version);
-
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glEnable(GL_CULL_FACE);
@@ -118,11 +139,11 @@ bool eglInit(const ivec2 size)
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float) * shork->vertexCount, shork->vertexData, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(8 * sizeof(float) * shork->vertexCount), shork->vertexData, GL_STATIC_DRAW);
 
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, shork->indexCount * sizeof(uint), shork->indexData, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(shork->indexCount * sizeof(uint)), shork->indexData, GL_STATIC_DRAW);
 
     const GLuint vertexShader = eglCreateShader("assets/vertex.glsl", GL_VERTEX_SHADER);
     if (vertexShader == -1)
@@ -152,28 +173,30 @@ bool eglInit(const ivec2 size)
     }
     glUseProgram(shaderProgram);
 
-    Image* haj_tex = readImage("assets/shork.png");
-    if (haj_tex == NULL)
+    const size_t flagPathSize = strlen("assets/flags/") + strlen(overlayTexture) + strlen(".png") + 1;
+    char* flagPath = malloc(flagPathSize);
+    snprintf(flagPath, flagPathSize, "assets/flags/%s.png", overlayTexture);
+
+    if (!eglLoadTexture("assets/shork.png", &albedo_texture, true)) return false;
+    if (!eglLoadTexture(flagPath, &overlay_texture, true))
     {
-        fprintf(stderr, "Failed to load texture\n");
+        fprintf(stderr, "Failed to load flag texture\n");
+        free(flagPath);
         return false;
     }
+    free(flagPath);
 
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, haj_tex->width, haj_tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                 haj_tex->data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    free(haj_tex->data);
-    free(haj_tex);
+    glBindTexture(GL_TEXTURE_2D, albedo_texture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, overlay_texture);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    const char* renderer = (const char*)glGetString(GL_RENDERER);
+    const char* version = (const char*)glGetString(GL_VERSION);
+    printf("Renderer: %s\n", renderer);
+    printf("OpenGL version: %s\n", version);
 
     return true;
 }
@@ -260,7 +283,10 @@ void eglDrawFrame()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "PROJECTION"), 1, GL_FALSE, *modelViewProjectionMatrix[0]);
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "WORLD"), 1, GL_FALSE, modelWorldMatrix[0]);
-    glUniform1i(glGetUniformLocation(shaderProgram, "TEXTURE"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgram, "ALBEDO_TEXTURE"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgram, "OVERLAY_TEXTURE"), 1);
+    const vec2 screenSize = {(float)viewport[0], (float)viewport[1]};
+    glUniform2fv(glGetUniformLocation(shaderProgram, "SCREEN_SIZE"), 1, screenSize);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, (GLsizei)shork->indexCount, GL_UNSIGNED_INT, 0);
     eglSwapBuffers(display, surface);
@@ -268,7 +294,8 @@ void eglDrawFrame()
 
 void eglCleanup()
 {
-    glDeleteTextures(1, &texture);
+    glDeleteTextures(1, &albedo_texture);
+    glDeleteTextures(1, &overlay_texture);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);

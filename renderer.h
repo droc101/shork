@@ -11,9 +11,10 @@
 /**
  * Initializes EGL and creates and offscreen framebuffer with 2x the height of the size.
  * @param size The size of the framebuffer.
+ * @param overlayTexture
  * @return whether the initialization was successful.
  */
-bool eglInit(const ivec2 size);
+bool eglInit(const ivec2 size, const char* overlayTexture);
 
 /**
  * Cleans up EGL resources.

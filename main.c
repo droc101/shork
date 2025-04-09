@@ -4,7 +4,9 @@
 #include "ansi.h"
 #include "console.h"
 #include "renderer.h"
+#include "args.h"
 
+// Uncomment to allow terminals that do not meet requirements (at least 10x10, 24bit color) to run.
 //#define ALLOW_INVALID_TERMINALS
 
 ivec2 consoleSize = {0, 0};
@@ -21,7 +23,7 @@ void handleCtrlC()
     stop = true;
 }
 
-int main(int argc, char *argv[])
+int main(const int argc, char *argv[])
 {
     char *path = argv[0];
     char *lastSlash = strrchr(path, '/');
@@ -39,7 +41,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-
     signal(SIGINT, handleCtrlC);
 
     getConsoleSize(consoleSize);
@@ -55,20 +56,26 @@ int main(int argc, char *argv[])
 #endif
     }
 
+#ifndef ALLOW_INVALID_TERMINALS
     if (!consoleSupportsTrueColor())
     {
         fprintf(stderr, "This terminal does not seem to support 24-bit color.\n");
         return 1;
     }
+#endif
+
+
+    const char *flag = get_arg(argc, argv, "--flag", "rainbow");
 
     if (!consoleInit(consoleSize)) exit(1);
-    if (!eglInit(consoleSize)) exit(1);
+    if (!eglInit(consoleSize, flag)) exit(1);
 
     while (!stop) renderFrame(); // This can be interrupted by Ctrl+C
 
     eglCleanup();
     consoleCleanup();
     setvbuf(stdout, NULL, _IONBF, 0);
+    fflush(stdout);
     printf(ANSI_SHOW_CURSOR); // Show cursor
     printf(ANSI_RESET_COLORS "\n"); // Reset colors
     printf(ANSI_CLEAR_SCREEN); // Clear screen
