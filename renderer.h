@@ -35,13 +35,13 @@ void eglGetFramebuffer(void* buffer);
  * @param transformMatrix The transform matrix to be filled.
  * @param rotation The rotation angle in degrees.
  */
-void eglGetModelWorldMatrix(mat4 *transformMatrix, double rotation);
+void eglGetModelWorldMatrix(mat4* transformMatrix, double rotation);
 
 /**
  * Get the world view matrix.
  * @return The world view matrix.
  */
-mat4 *eglGetWorldViewMatrix();
+mat4* eglGetWorldViewMatrix();
 
 /**
  * Create a shader from a file.
@@ -49,6 +49,6 @@ mat4 *eglGetWorldViewMatrix();
  * @param type The type of shader to create.
  * @return The shader ID.
  */
-GLuint eglCreateShader(const char *filename, GLenum type);
+GLuint eglCreateShader(const char* filename, GLenum type);
 
 #endif //RENDERER_H

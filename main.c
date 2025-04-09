@@ -1,5 +1,3 @@
-
-
 #include <signal.h>
 
 #include "console.h"
@@ -33,7 +31,8 @@ int main(void)
 
     getConsoleSize(consoleSize);
 
-    if (consoleSize[0] <= 10 || consoleSize[1] <= 10) {
+    if (consoleSize[0] <= 10 || consoleSize[1] <= 10)
+    {
 #ifdef ALLOW_INVALID_TERMINALS
         consoleSize[0] = 80;
         consoleSize[1] = 24;
@@ -41,7 +40,6 @@ int main(void)
         fprintf(stderr, "Invalid console size: Must be at least 10x10.\n");
         return 1;
 #endif
-
     }
     consoleInit(consoleSize);
     eglInit(consoleSize);

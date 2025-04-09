@@ -8,21 +8,23 @@
 #include <stdlib.h>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "lib/stb_image.h"
+#include "stb/stb_image.h"
 
 
-char *readFile(const char *filename)
+char* readFile(const char* filename)
 {
-    FILE *f = fopen(filename, "r");
-    if (f == NULL) {
+    FILE* f = fopen(filename, "r");
+    if (f == NULL)
+    {
         fprintf(stderr, "Failed to open file: %s\n", filename);
         return NULL;
     }
     fseek(f, 0, SEEK_END);
     const size_t size = ftell(f);
     fseek(f, 0, SEEK_SET);
-    char *buffer = calloc(size + 1, 1);
-    if (buffer == NULL) {
+    char* buffer = calloc(size + 1, 1);
+    if (buffer == NULL)
+    {
         fprintf(stderr, "Failed to allocate memory for file: %s\n", filename);
         fclose(f);
         return NULL;
@@ -32,18 +34,20 @@ char *readFile(const char *filename)
     return buffer;
 }
 
-void *readFileRaw(const char *filename)
+void* readFileRaw(const char* filename)
 {
-    FILE *f = fopen(filename, "r");
-    if (f == NULL) {
+    FILE* f = fopen(filename, "r");
+    if (f == NULL)
+    {
         fprintf(stderr, "Failed to open file: %s\n", filename);
         return NULL;
     }
     fseek(f, 0, SEEK_END);
     const size_t size = ftell(f);
     fseek(f, 0, SEEK_SET);
-    void *buffer = malloc(size);
-    if (buffer == NULL) {
+    void* buffer = malloc(size);
+    if (buffer == NULL)
+    {
         fprintf(stderr, "Failed to allocate memory for file: %s\n", filename);
         fclose(f);
         return NULL;
@@ -53,15 +57,17 @@ void *readFileRaw(const char *filename)
     return buffer;
 }
 
-Image *readImage(const char *filename)
+Image* readImage(const char* filename)
 {
-    Image *image = malloc(sizeof(Image));
+    Image* image = malloc(sizeof(Image));
     image->data = stbi_load(filename, &image->width, &image->height, &image->channels, 0);
-    if (image->data == NULL) {
+    if (image->data == NULL)
+    {
         fprintf(stderr, "Failed to load image: %s\n", filename);
         return NULL;
     }
-    if (image->channels != 4) {
+    if (image->channels != 4)
+    {
         fprintf(stderr, "Unsupported image format: %s\n", filename);
         stbi_image_free(image->data);
         free(image);

@@ -15,7 +15,7 @@ struct ModelHeader
     /// The number of indices in the model
     unsigned int indexCount;
     /// The number of vertices in the model
-    unsigned int  vertexCount;
+    unsigned int vertexCount;
     /// The "magic" for the data, should be "DAT"
     char dataSig[4];
 } __attribute__((packed));
@@ -25,13 +25,13 @@ struct Model
     ModelHeader header;
 
     /// The number of vertices in the model
-    unsigned int  vertexCount;
+    unsigned int vertexCount;
     /// The number of indices in the model
-    unsigned int  indexCount;
+    unsigned int indexCount;
     /// Packed vertex data, (X Y Z) (U V) (NX NY NZ)
-    float *vertexData;
+    float* vertexData;
     /// Index data
-    unsigned int  *indexData;
+    unsigned int* indexData;
 };
 
 /**
@@ -39,6 +39,6 @@ struct Model
  * @param asset The path to the model file.
  * @return The loaded model, or NULL if the model could not be loaded.
  */
-Model *LoadModel(const char *asset);
+Model* LoadModel(const char* asset);
 
 #endif //MODEL_LOADER_H

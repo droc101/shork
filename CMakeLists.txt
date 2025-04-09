@@ -16,7 +16,6 @@ add_executable(shork main.c
         console.h
         io.c
         io.h
-        lib/stb_image.h
         model_loader.c
         model_loader.h
 )

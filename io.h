@@ -14,7 +14,7 @@ typedef struct Image
     // The number of channels in the image
     int channels;
     // The image data
-    unsigned char *data;
+    unsigned char* data;
 } Image;
 
 /**
@@ -22,20 +22,20 @@ typedef struct Image
  * @param filename The name of the file to read.
  * @return The contents of the file as a string, or NULL if the file could not be read.
  */
-char *readFile(const char *filename);
+char* readFile(const char* filename);
 
 /**
  * Read a binary file into a buffer.
  * @param filename The name of the file to read.
  * @return The contents of the file as a buffer, or NULL if the file could not be read.
  */
-void *readFileRaw(const char *filename);
+void* readFileRaw(const char* filename);
 
 /**
  * Read an image from a file.
  * @param filename The name of the file to read.
  * @return The image data, or NULL if the file could not be read.
  */
-Image *readImage(const char *filename);
+Image* readImage(const char* filename);
 
 #endif //IO_H

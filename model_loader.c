@@ -11,11 +11,10 @@
 
 #include "io.h"
 
-Model *LoadModel(const char *asset)
+Model* LoadModel(const char* asset)
 {
-
     const void* file = readFileRaw(asset);
-    Model *model = malloc(sizeof(Model));
+    Model* model = malloc(sizeof(Model));
     memcpy(&model->header, file, sizeof(ModelHeader));
 
     if (strncmp(model->header.sig, "MSH", 3) != 0)

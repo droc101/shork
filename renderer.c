@@ -24,8 +24,8 @@ unsigned int VBO;
 unsigned int EBO;
 unsigned int shaderProgram;
 GLuint texture;
-Model *shork = NULL;
-mat4 *modelViewProjectionMatrix;
+Model* shork = NULL;
+mat4* modelViewProjectionMatrix;
 
 int eglInit(const ivec2 size)
 {
@@ -33,12 +33,14 @@ int eglInit(const ivec2 size)
     viewport[1] = size[1] * 2;
 
     display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (display == EGL_NO_DISPLAY) {
+    if (display == EGL_NO_DISPLAY)
+    {
         fprintf(stderr, "Failed to get EGL display\n");
         return 1;
     }
 
-    if (!eglInitialize(display, NULL, NULL)) {
+    if (!eglInitialize(display, NULL, NULL))
+    {
         fprintf(stderr, "Failed to initialize EGL\n");
         return 1;
     }
@@ -57,7 +59,8 @@ int eglInit(const ivec2 size)
 
     EGLConfig config;
     EGLint numConfigs;
-    if (!eglChooseConfig(display, configAttribs, &config, 1, &numConfigs) || numConfigs == 0) {
+    if (!eglChooseConfig(display, configAttribs, &config, 1, &numConfigs) || numConfigs == 0)
+    {
         fprintf(stderr, "Failed to choose EGL config\n");
         return 1;
     }
@@ -67,11 +70,13 @@ int eglInit(const ivec2 size)
         EGL_NONE,
     };
     surface = eglCreatePbufferSurface(display, config, pbufferAttribs);
-    if (surface == EGL_NO_SURFACE) {
+    if (surface == EGL_NO_SURFACE)
+    {
         fprintf(stderr, "Failed to create EGL Pbuffer surface\n");
         return 1;
     }
-    if (!eglBindAPI(EGL_OPENGL_ES_API)) {
+    if (!eglBindAPI(EGL_OPENGL_ES_API))
+    {
         fprintf(stderr, "Failed to bind OpenGL ES API\n");
         return 1;
     }
@@ -80,17 +85,19 @@ int eglInit(const ivec2 size)
         EGL_NONE
     };
     context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribs);
-    if (context == EGL_NO_CONTEXT) {
+    if (context == EGL_NO_CONTEXT)
+    {
         fprintf(stderr, "Failed to create EGL context\n");
         return 1;
     }
-    if (!eglMakeCurrent(display, surface, surface, context)) {
+    if (!eglMakeCurrent(display, surface, surface, context))
+    {
         fprintf(stderr, "Failed to make EGL context current\n");
         return 1;
     }
 
-    const char *renderer = (const char*)glGetString(GL_RENDERER);
-    const char *version = (const char*)glGetString(GL_VERSION);
+    const char* renderer = (const char*)glGetString(GL_RENDERER);
+    const char* version = (const char*)glGetString(GL_VERSION);
     printf("Renderer: %s\n", renderer);
     printf("OpenGL version: %s\n", version);
 
@@ -110,12 +117,14 @@ int eglInit(const ivec2 size)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, shork->indexCount * sizeof(uint), shork->indexData, GL_STATIC_DRAW);
 
     const GLuint vertexShader = eglCreateShader("assets/vertex.glsl", GL_VERTEX_SHADER);
-    if (vertexShader == -1) {
+    if (vertexShader == -1)
+    {
         fprintf(stderr, "Failed to create vertex shader\n");
         return 1;
     }
     const GLuint fragmentShader = eglCreateShader("assets/fragment.glsl", GL_FRAGMENT_SHADER);
-    if (fragmentShader == -1) {
+    if (fragmentShader == -1)
+    {
         fprintf(stderr, "Failed to create fragment shader\n");
         return 1;
     }
@@ -126,7 +135,8 @@ int eglInit(const ivec2 size)
     glLinkProgram(shaderProgram);
     GLint success;
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
+    if (!success)
+    {
         char infoLog[512];
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
         fprintf(stderr, "Shader program link failed: %s\n", infoLog);
@@ -134,11 +144,12 @@ int eglInit(const ivec2 size)
     }
     glUseProgram(shaderProgram);
 
-    Image *haj_tex = readImage("assets/shork.png");
+    Image* haj_tex = readImage("assets/shork.png");
 
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, haj_tex->width, haj_tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, haj_tex->data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, haj_tex->width, haj_tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 haj_tex->data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -154,13 +165,13 @@ int eglInit(const ivec2 size)
     return 0;
 }
 
-void eglGetModelWorldMatrix(mat4 *transformMatrix, const double rotation)
+void eglGetModelWorldMatrix(mat4* transformMatrix, const double rotation)
 {
     glm_mat4_identity(*transformMatrix);
     glm_rotate(*transformMatrix, (float)rotation, (vec3){0, 1, 0});
 }
 
-mat4 *eglGetWorldViewMatrix()
+mat4* eglGetWorldViewMatrix()
 {
     vec3 cameraPosition = {0, 0.5f, 3};
     const float aspectRatio = (float)viewport[0] / (float)viewport[1];
@@ -176,8 +187,9 @@ mat4 *eglGetWorldViewMatrix()
     mat4 modelViewMatrix = GLM_MAT4_ZERO_INIT;
     glm_mat4_mul(viewMatrix, identityMatrix, modelViewMatrix);
 
-    mat4 *modelViewProjectionMatrix = malloc(sizeof(mat4));
-    if (modelViewProjectionMatrix == NULL) {
+    mat4* modelViewProjectionMatrix = malloc(sizeof(mat4));
+    if (modelViewProjectionMatrix == NULL)
+    {
         fprintf(stderr, "Failed to allocate memory for modelViewProjectionMatrix\n");
         return NULL;
     }
@@ -186,10 +198,11 @@ mat4 *eglGetWorldViewMatrix()
     return modelViewProjectionMatrix;
 }
 
-GLuint eglCreateShader(const char *filename, const GLenum type)
+GLuint eglCreateShader(const char* filename, const GLenum type)
 {
-    const GLchar *shaderSource = readFile(filename);
-    if (shaderSource == NULL) {
+    const GLchar* shaderSource = readFile(filename);
+    if (shaderSource == NULL)
+    {
         fprintf(stderr, "Failed to read shader file: %s\n", filename);
         return -1;
     }
@@ -198,7 +211,8 @@ GLuint eglCreateShader(const char *filename, const GLenum type)
     glCompileShader(shader);
     GLint success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
+    if (!success)
+    {
         char infoLog[512];
         glGetShaderInfoLog(shader, 512, NULL, infoLog);
         fprintf(stderr, "Shader compile failed: %s\n", infoLog);
