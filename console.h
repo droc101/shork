@@ -16,7 +16,7 @@ void getConsoleSize(ivec2 size);
  * Initialize the console memory.
  * @param size The size of the console in characters.
  */
-void consoleInit(const ivec2 size);
+bool consoleInit(const ivec2 size);
 
 /**
  * Draw the framebuffer to the console.

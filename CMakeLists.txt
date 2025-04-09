@@ -18,6 +18,7 @@ add_executable(shork main.c
         io.h
         model_loader.c
         model_loader.h
+        ansi.h
 )
 
 target_link_libraries(shork -lEGL -lGLESv2 m)

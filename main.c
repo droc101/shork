@@ -1,5 +1,6 @@
 #include <signal.h>
 
+#include "ansi.h"
 #include "console.h"
 #include "renderer.h"
 
@@ -16,9 +17,9 @@ void renderFrame()
 void handleCtrlC()
 {
     setvbuf(stdout, NULL, _IONBF, 0);
-    printf("\033[?25h"); // Show cursor
-    printf("\033[0m\n"); // Reset colors
-    printf("\033[H\033[J"); // Clear screen
+    printf(ANSI_SHOW_CURSOR); // Show cursor
+    printf(ANSI_RESET_COLORS "\n"); // Reset colors
+    printf(ANSI_CLEAR_SCREEN); // Clear screen
     printf("Goodbye\n");
     fflush(stdout);
     eglCleanup();
@@ -45,10 +46,11 @@ int main(void)
     if (!consoleSupportsTrueColor())
     {
         fprintf(stderr, "This terminal does not seem to support 24-bit color.\n");
+        return 1;
     }
 
-    consoleInit(consoleSize);
-    eglInit(consoleSize);
+    if (!consoleInit(consoleSize)) exit(1);
+    if (!eglInit(consoleSize)) exit(1);
 
     while (1) renderFrame();
 }

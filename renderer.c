@@ -27,7 +27,7 @@ GLuint texture;
 Model* shork = NULL;
 mat4* modelViewProjectionMatrix;
 
-int eglInit(const ivec2 size)
+bool eglInit(const ivec2 size)
 {
     viewport[0] = size[0];
     viewport[1] = size[1] * 2;
@@ -36,13 +36,13 @@ int eglInit(const ivec2 size)
     if (display == EGL_NO_DISPLAY)
     {
         fprintf(stderr, "Failed to get EGL display\n");
-        return 1;
+        return false;
     }
 
     if (!eglInitialize(display, NULL, NULL))
     {
         fprintf(stderr, "Failed to initialize EGL\n");
-        return 1;
+        return false;
     }
 
     const EGLint configAttribs[] = {
@@ -62,7 +62,7 @@ int eglInit(const ivec2 size)
     if (!eglChooseConfig(display, configAttribs, &config, 1, &numConfigs) || numConfigs == 0)
     {
         fprintf(stderr, "Failed to choose EGL config\n");
-        return 1;
+        return false;
     }
     const EGLint pbufferAttribs[] = {
         EGL_WIDTH, viewport[0],
@@ -73,12 +73,12 @@ int eglInit(const ivec2 size)
     if (surface == EGL_NO_SURFACE)
     {
         fprintf(stderr, "Failed to create EGL Pbuffer surface\n");
-        return 1;
+        return false;
     }
     if (!eglBindAPI(EGL_OPENGL_ES_API))
     {
         fprintf(stderr, "Failed to bind OpenGL ES API\n");
-        return 1;
+        return false;
     }
     const EGLint contextAttribs[] = {
         EGL_CONTEXT_CLIENT_VERSION, 3,
@@ -88,12 +88,12 @@ int eglInit(const ivec2 size)
     if (context == EGL_NO_CONTEXT)
     {
         fprintf(stderr, "Failed to create EGL context\n");
-        return 1;
+        return false;
     }
     if (!eglMakeCurrent(display, surface, surface, context))
     {
         fprintf(stderr, "Failed to make EGL context current\n");
-        return 1;
+        return false;
     }
 
     const char* renderer = (const char*)glGetString(GL_RENDERER);
@@ -120,13 +120,13 @@ int eglInit(const ivec2 size)
     if (vertexShader == -1)
     {
         fprintf(stderr, "Failed to create vertex shader\n");
-        return 1;
+        return false;
     }
     const GLuint fragmentShader = eglCreateShader("assets/fragment.glsl", GL_FRAGMENT_SHADER);
     if (fragmentShader == -1)
     {
         fprintf(stderr, "Failed to create fragment shader\n");
-        return 1;
+        return false;
     }
 
     shaderProgram = glCreateProgram();
@@ -140,7 +140,7 @@ int eglInit(const ivec2 size)
         char infoLog[512];
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
         fprintf(stderr, "Shader program link failed: %s\n", infoLog);
-        return 1;
+        return false;
     }
     glUseProgram(shaderProgram);
 
@@ -162,7 +162,7 @@ int eglInit(const ivec2 size)
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    return 0;
+    return true;
 }
 
 void eglGetModelWorldMatrix(mat4* transformMatrix, const double rotation)

@@ -4,6 +4,7 @@
 
 #ifndef RENDERER_H
 #define RENDERER_H
+#include <stdbool.h>
 #include <cglm/types.h>
 #include <GLES3/gl3.h>
 
@@ -12,7 +13,7 @@
  * @param size The size of the framebuffer.
  * @return 0 on success, anything else on failure.
  */
-int eglInit(const ivec2 size);
+bool eglInit(const ivec2 size);
 
 /**
  * Cleans up EGL resources.

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #define STB_SPRINTF_IMPLEMENTATION
+#include "ansi.h"
 #include "stb/stb_sprintf.h"
 #include "renderer.h"
 
@@ -25,34 +26,35 @@ void getConsoleSize(ivec2 size)
     size[1] = w.ws_row;
 }
 
-void consoleInit(const ivec2 size)
+bool consoleInit(const ivec2 size)
 {
     framebuffer = malloc(size[0] * size[1] * 8);
     if (framebuffer == NULL)
     {
         fprintf(stderr, "Failed to allocate framebuffer\n");
-        return;
+        return false;
     }
-    size_t outputBufferSize = sizeof("\033[48;2;100;100;100m\033[38;2;100;100;100m") * size[0] * size[1];
-    outputBufferSize += sizeof("\033[0m\n") * size[1];
+    size_t outputBufferSize = sizeof(ANSI_FG_COLOR(255,255,255) ANSI_BG_COLOR(255,255,255)) * size[0] * size[1];
+    outputBufferSize += sizeof(ANSI_RESET_COLORS "\n") * size[1];
     outputBufferSize += 256;
     outputBuffer = malloc(outputBufferSize);
     if (outputBuffer == NULL)
     {
         fprintf(stderr, "Failed to allocate output buffer\n");
         free(framebuffer);
-        return;
+        return false;
     }
     setvbuf(stdout, outputBuffer, _IOFBF, 1 << 30);
-    printf("\033[?25l"); // Hide cursor
+    printf(ANSI_HIDE_CURSOR); // Hide cursor
     fflush(stdout);
+    return true;
 }
 
 void consoleDraw(const ivec2 viewport)
 {
     eglGetFramebuffer(framebuffer);
     char* buf = outputBuffer;
-    stbsp_sprintf(buf, "\033[H"); // Move cursor to home position
+    stbsp_sprintf(buf, ANSI_MOVE_CURSOR_TOP_LEFT); // Move cursor to home position
     buf += strlen(buf);
     for (int hy = viewport[1] - 1; hy >= 0; hy--)
     {
@@ -61,11 +63,11 @@ void consoleDraw(const ivec2 viewport)
             const int y = hy * 2;
             const unsigned char* pixel = (unsigned char*)framebuffer + ((y + 1) * viewport[0] + x) * 4;
             const unsigned char* pixelBelow = (unsigned char*)framebuffer + (y * viewport[0] + x) * 4;
-            stbsp_sprintf(buf, "\033[48;2;%d;%d;%dm\033[38;2;%d;%d;%dm▄", pixel[0], pixel[1], pixel[2], pixelBelow[0],
+            stbsp_sprintf(buf, ANSI_BG_COLOR_FMT ANSI_FG_COLOR_FMT "▄", pixel[0], pixel[1], pixel[2], pixelBelow[0],
                           pixelBelow[1], pixelBelow[2]);
             buf += strlen(buf);
         }
-        stbsp_sprintf(buf, "\033[0m\n"); // Reset colors and move to next line
+        stbsp_sprintf(buf, ANSI_RESET_COLORS "\n"); // Reset colors and move to next line
         buf += strlen(buf);
     }
     buf -= 1;
