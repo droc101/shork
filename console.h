@@ -31,4 +31,9 @@ void consoleDraw(const ivec2 viewport);
  */
 bool consoleSupportsTrueColor();
 
+/**
+ * Cleanup the console memory.
+ */
+void consoleCleanup();
+
 #endif //CONSOLE_H

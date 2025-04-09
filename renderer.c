@@ -19,13 +19,13 @@ EGLDisplay display;
 EGLSurface surface;
 EGLContext context;
 
-ivec2 viewport;
-unsigned int VBO;
-unsigned int EBO;
-unsigned int shaderProgram;
-GLuint texture;
+ivec2 viewport = {0, 0};
+unsigned int VBO = 0;
+unsigned int EBO = 0;
+unsigned int shaderProgram = 0;
+GLuint texture = 0;
 Model* shork = NULL;
-mat4* modelViewProjectionMatrix;
+mat4* modelViewProjectionMatrix = NULL;
 
 bool eglInit(const ivec2 size)
 {
@@ -106,7 +106,17 @@ bool eglInit(const ivec2 size)
     glEnable(GL_CULL_FACE);
 
     shork = LoadModel("assets/shork.bin");
+    if (shork == NULL)
+    {
+        fprintf(stderr, "Failed to load model\n");
+        return false;
+    }
     modelViewProjectionMatrix = eglGetWorldViewMatrix();
+    if (modelViewProjectionMatrix == NULL)
+    {
+        fprintf(stderr, "Failed to get world view matrix\n");
+        return false;
+    }
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -145,6 +155,11 @@ bool eglInit(const ivec2 size)
     glUseProgram(shaderProgram);
 
     Image* haj_tex = readImage("assets/shork.png");
+    if (haj_tex == NULL)
+    {
+        fprintf(stderr, "Failed to load texture\n");
+        return false;
+    }
 
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);

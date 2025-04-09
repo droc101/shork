@@ -13,7 +13,7 @@
 
 Model* LoadModel(const char* asset)
 {
-    const void* file = readFileRaw(asset);
+    void* file = readFileRaw(asset);
     Model* model = malloc(sizeof(Model));
     memcpy(&model->header, file, sizeof(ModelHeader));
 
@@ -21,6 +21,7 @@ Model* LoadModel(const char* asset)
     {
         printf("Tried to load a model, but its first magic was incorrect (got %s)!", model->header.sig);
         free(model);
+        free(file);
         return NULL;
     }
 
@@ -28,6 +29,7 @@ Model* LoadModel(const char* asset)
     {
         printf("Tried to load a model, but its second magic was incorrect (got %s)!", model->header.dataSig);
         free(model);
+        free(file);
         return NULL;
     }
 
@@ -43,6 +45,8 @@ Model* LoadModel(const char* asset)
     // Copy the index data, then the vertex data
     memcpy(model->indexData, file + sizeof(ModelHeader), indexSizeBytes);
     memcpy(model->vertexData, file + sizeof(ModelHeader) + indexSizeBytes, vertsSizeBytes);
+
+    free(file);
 
     return model;
 }

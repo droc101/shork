@@ -88,3 +88,11 @@ bool consoleSupportsTrueColor()
     }
     return false;
 }
+
+void consoleCleanup()
+{
+    free(framebuffer);
+    framebuffer = NULL;
+    free(outputBuffer);
+    outputBuffer = NULL;
+}

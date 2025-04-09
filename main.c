@@ -9,6 +9,7 @@
 //#define ALLOW_INVALID_TERMINALS
 
 ivec2 consoleSize = {0, 0};
+bool stop = false;
 
 void renderFrame()
 {
@@ -18,14 +19,7 @@ void renderFrame()
 
 void handleCtrlC()
 {
-    setvbuf(stdout, NULL, _IONBF, 0);
-    printf(ANSI_SHOW_CURSOR); // Show cursor
-    printf(ANSI_RESET_COLORS "\n"); // Reset colors
-    printf(ANSI_CLEAR_SCREEN); // Clear screen
-    printf("Goodbye\n");
-    fflush(stdout);
-    eglCleanup();
-    exit(0);
+    stop = true;
 }
 
 int main(int argc, char *argv[])
@@ -71,5 +65,15 @@ int main(int argc, char *argv[])
     if (!consoleInit(consoleSize)) exit(1);
     if (!eglInit(consoleSize)) exit(1);
 
-    while (1) renderFrame(); // This can be interrupted by Ctrl+C
+    while (!stop) renderFrame(); // This can be interrupted by Ctrl+C
+
+    eglCleanup();
+    consoleCleanup();
+    setvbuf(stdout, NULL, _IONBF, 0);
+    printf(ANSI_SHOW_CURSOR); // Show cursor
+    printf(ANSI_RESET_COLORS "\n"); // Reset colors
+    printf(ANSI_CLEAR_SCREEN); // Clear screen
+    printf("Goodbye\n");
+    fflush(stdout);
+    return 0;
 }
