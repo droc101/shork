@@ -11,7 +11,7 @@
 /**
  * Initializes EGL and creates and offscreen framebuffer with 2x the height of the size.
  * @param size The size of the framebuffer.
- * @return 0 on success, anything else on failure.
+ * @return whether the initialization was successful.
  */
 bool eglInit(const ivec2 size);
 

@@ -15,6 +15,7 @@ void getConsoleSize(ivec2 size);
 /**
  * Initialize the console memory.
  * @param size The size of the console in characters.
+ * @return whether the initialization was successful.
  */
 bool consoleInit(const ivec2 size);
 

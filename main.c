@@ -1,4 +1,6 @@
 #include <signal.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "ansi.h"
 #include "console.h"
@@ -26,8 +28,25 @@ void handleCtrlC()
     exit(0);
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
+    char *path = argv[0];
+    char *lastSlash = strrchr(path, '/');
+    if (lastSlash != NULL)
+    {
+        *lastSlash = '\0';
+    }
+    else
+    {
+        path = ".";
+    }
+    if (chdir(path) != 0)
+    {
+        fprintf(stderr, "Error changing directory to %s\n", path);
+        return 1;
+    }
+
+
     signal(SIGINT, handleCtrlC);
 
     getConsoleSize(consoleSize);
@@ -52,5 +71,5 @@ int main(void)
     if (!consoleInit(consoleSize)) exit(1);
     if (!eglInit(consoleSize)) exit(1);
 
-    while (1) renderFrame();
+    while (1) renderFrame(); // This can be interrupted by Ctrl+C
 }
