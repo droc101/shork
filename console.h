@@ -24,4 +24,10 @@ void consoleInit(const ivec2 size);
  */
 void consoleDraw(const ivec2 viewport);
 
+/**
+ * Check if the console supports true color. ($COLORTERM = "truecolor" or "24bit")
+ * @return Whether the console supports true color.
+ */
+bool consoleSupportsTrueColor();
+
 #endif //CONSOLE_H

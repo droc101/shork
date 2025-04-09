@@ -41,6 +41,12 @@ int main(void)
         return 1;
 #endif
     }
+
+    if (!consoleSupportsTrueColor())
+    {
+        fprintf(stderr, "This terminal does not seem to support 24-bit color.\n");
+    }
+
     consoleInit(consoleSize);
     eglInit(consoleSize);
 

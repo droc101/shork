@@ -73,3 +73,16 @@ void consoleDraw(const ivec2 viewport)
     fwrite(outputBuffer, strlen(outputBuffer), 1, stdout);
     fflush(stdout);
 }
+
+bool consoleSupportsTrueColor()
+{
+    const char* colorterm = getenv("COLORTERM");
+    if (colorterm != NULL)
+    {
+        if (strstr(colorterm, "truecolor") || strstr(colorterm, "24bit"))
+        {
+            return true;
+        }
+    }
+    return false;
+}

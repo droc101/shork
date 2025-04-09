@@ -16,7 +16,7 @@ void main()
     uv.y = 1.0 - uv.y;
     COLOR = texture(TEXTURE, uv);
 
-    vec3 light_dir = normalize(vec3(0.0, 0.0, 1.0));
+    vec3 light_dir = normalize(vec3(0.2, 0.0, 0.8));
     vec3 normal = normalize(NORMAL);
     normal = normalize(vec3(WORLD * vec4(normal, 0.0)));
 
