@@ -263,7 +263,6 @@ void eglDrawFrame()
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "PROJECTION"), 1, GL_FALSE, *modelViewProjectionMatrix[0]);
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "WORLD"), 1, GL_FALSE, modelWorldMatrix[0]);
     glUniform1i(glGetUniformLocation(shaderProgram, "TEXTURE"), 0);
-    glUniform1f(glGetUniformLocation(shaderProgram, "ROTATION"), (GLfloat)rot);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, (GLsizei)shork->indexCount, GL_UNSIGNED_INT, 0);
     eglSwapBuffers(display, surface);

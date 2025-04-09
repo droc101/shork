@@ -8,7 +8,6 @@ out mediump vec4 COLOR;
 
 uniform mat4 WORLD;
 uniform sampler2D TEXTURE;
-uniform float ROTATION;
 
 void main()
 {
