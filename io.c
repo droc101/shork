@@ -2,12 +2,11 @@
 // Created by droc101 on 4/8/25.
 //
 
-#include "io.h"
+#define STB_IMAGE_IMPLEMENTATION
 
+#include "io.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
 

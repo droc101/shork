@@ -1,7 +1,6 @@
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
-
 #include "ansi.h"
 #include "console.h"
 #include "renderer.h"

@@ -2,10 +2,11 @@
 // Created by droc101 on 4/8/25.
 //
 
+#define STB_SPRINTF_IMPLEMENTATION
+
 #include "console.h"
 #include <string.h>
 #include <sys/ioctl.h>
-#define STB_SPRINTF_IMPLEMENTATION
 #include "ansi.h"
 #include "stb/stb_sprintf.h"
 #include "renderer.h"

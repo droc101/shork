@@ -3,15 +3,13 @@
 //
 
 #include "renderer.h"
-
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
 #include <bits/signum-generic.h>
+#include <cglm/cglm.h>
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
-#include <cglm/cglm.h>
-
 #include "io.h"
 #include "model_loader.h"
 
