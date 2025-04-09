@@ -34,7 +34,7 @@ bool consoleInit(const ivec2 size)
         fprintf(stderr, "Failed to allocate framebuffer\n");
         return false;
     }
-    size_t outputBufferSize = sizeof(ANSI_FG_COLOR(255,255,255) ANSI_BG_COLOR(255,255,255)) * size[0] * size[1];
+    size_t outputBufferSize = sizeof(ANSI_FG_COLOR(255,255,255) ANSI_BG_COLOR(255,255,255) "▄") * size[0] * size[1];
     outputBufferSize += sizeof(ANSI_RESET_COLORS "\n") * size[1];
     outputBufferSize += 256;
     outputBuffer = malloc(outputBufferSize);
