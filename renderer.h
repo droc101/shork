@@ -53,4 +53,16 @@ mat4* eglGetWorldViewMatrix();
  */
 GLuint eglCreateShader(const char* filename, GLenum type);
 
+/**
+ * Resize the framebuffer.
+ * @param newSize The new size of the framebuffer in characters. Will be doubled in height.
+ * @return Whether the resize was successful.
+ */
+bool eglResize(const ivec2 newSize);
+
+/**
+ * Get the current viewport size in pixels.
+ */
+const ivec2 *getViewport();
+
 #endif //RENDERER_H

@@ -97,3 +97,13 @@ void consoleCleanup()
     free(outputBuffer);
     outputBuffer = NULL;
 }
+
+void consoleResize(const ivec2 newSize)
+{
+    consoleCleanup();
+    if (!consoleInit(newSize))
+    {
+        fprintf(stderr, "Failed to reinitialize console\n");
+        exit(1);
+    }
+}

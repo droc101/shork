@@ -11,11 +11,22 @@
 
 ivec2 consoleSize = {0, 0};
 bool stop = false;
+ulong frames = 0;
 
 void renderFrame()
 {
     eglDrawFrame();
     consoleDraw(consoleSize);
+    frames++;
+    ivec2 conSize = {0, 0};
+    getConsoleSize(conSize);
+    if (conSize[0] != consoleSize[0] || conSize[1] != consoleSize[1])
+    {
+        consoleSize[0] = conSize[0];
+        consoleSize[1] = conSize[1];
+        if (!eglResize(consoleSize)) exit(1);
+        consoleResize(consoleSize);
+    }
 }
 
 void handleCtrlC()

@@ -36,4 +36,11 @@ bool consoleSupportsTrueColor();
  */
 void consoleCleanup();
 
+/**
+ * Resize the console framebuffer.
+ * @param newSize The new size of the console in characters.
+ * @note This entirely recreates the framebuffer and output buffer.
+ */
+void consoleResize(const ivec2 newSize);
+
 #endif //CONSOLE_H

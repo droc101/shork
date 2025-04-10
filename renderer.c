@@ -17,6 +17,7 @@
 EGLDisplay display;
 EGLSurface surface;
 EGLContext context;
+EGLConfig config;
 
 ivec2 viewport = {0, 0};
 unsigned int VBO = 0;
@@ -81,7 +82,6 @@ bool eglInit(const ivec2 size, const char* overlayTexture)
         EGL_NONE
     };
 
-    EGLConfig config;
     EGLint numConfigs;
     if (!eglChooseConfig(display, configAttribs, &config, 1, &numConfigs) || numConfigs == 0)
     {
@@ -307,4 +307,42 @@ void eglCleanup()
 void eglGetFramebuffer(void* buffer)
 {
     glReadPixels(0, 0, viewport[0], viewport[1], GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+}
+
+bool eglResize(const ivec2 newSize)
+{
+    viewport[0] = newSize[0];
+    viewport[1] = newSize[1] * 2;
+    glViewport(0, 0, viewport[0], viewport[1]);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glDeleteRenderbuffers(1, &VBO);
+    glDeleteFramebuffers(1, &EBO);
+    eglDestroySurface(display, surface);
+    const EGLint pbufferAttribs[] = {
+        EGL_WIDTH, viewport[0],
+        EGL_HEIGHT, viewport[1],
+        EGL_NONE,
+    };
+    surface = eglCreatePbufferSurface(display, config, pbufferAttribs);
+    if (surface == EGL_NO_SURFACE)
+    {
+        fprintf(stderr, "Failed to create EGL Pbuffer surface\n");
+        return false;
+    }
+    if (!eglMakeCurrent(display, surface, surface, context))
+    {
+        fprintf(stderr, "Failed to make EGL context current\n");
+        return false;
+    }
+
+    free(modelViewProjectionMatrix);
+    modelViewProjectionMatrix = eglGetWorldViewMatrix();
+
+    return true;
+}
+
+const ivec2 *getViewport()
+{
+    return &viewport;
 }
