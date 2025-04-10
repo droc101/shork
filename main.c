@@ -1,5 +1,7 @@
+#include <EGL/egl.h>
 #include <signal.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include "ansi.h"
 #include "console.h"
@@ -11,7 +13,8 @@
 
 ivec2 consoleSize = {0, 0};
 bool stop = false;
-ulong frames = 0;
+long double frames = 0;
+static ulong startTime;
 
 void renderFrame()
 {
@@ -90,7 +93,14 @@ int main(const int argc, char *argv[])
     if (!consoleInit(consoleSize)) exit(1);
     if (!eglInit(consoleSize, flag)) exit(1);
 
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    startTime = ts.tv_sec * 1000000000 + ts.tv_nsec;
+
     while (!stop) renderFrame(); // This can be interrupted by Ctrl+C
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    const ulong totalTime = ts.tv_sec * 1000000000 + ts.tv_nsec - startTime;
 
     eglCleanup();
     consoleCleanup();
@@ -100,6 +110,7 @@ int main(const int argc, char *argv[])
     printf(ANSI_RESET_COLORS "\n"); // Reset colors
     printf(ANSI_CLEAR_SCREEN); // Clear screen
     printf("Goodbye\n");
+    printf("Average FPS: %Lf\nAverage MS/frame: %Lf\n", 1000000000 * frames / totalTime, totalTime / (1000000 * frames));
     fflush(stdout);
     return 0;
 }
