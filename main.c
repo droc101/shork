@@ -36,6 +36,15 @@ void handleCtrlC()
 
 int main(const int argc, char *argv[])
 {
+    if (has_arg(argc, argv, "-h") || has_arg(argc, argv, "--help"))
+    {
+        printf("Usage: %s [--flag=<value>]\n", argv[0]);
+        printf("Options:\n");
+        printf("  --flag=<value>  Set the flag value (default: rainbow)\n");
+        printf("Flags should be placed in \"assets/flags\" named <value>.png\n");
+        return 0;
+    }
+
     char *path = argv[0];
     char *lastSlash = strrchr(path, '/');
     if (lastSlash != NULL)

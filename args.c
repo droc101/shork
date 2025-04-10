@@ -20,3 +20,15 @@ char *get_arg(const int argc, char *argv[], const char *argument, char *default_
     }
     return default_value;
 }
+
+bool has_arg(const int argc, char *argv[], const char *argument)
+{
+    for (int i = 0; i < argc; i++)
+    {
+        if (strncmp(argv[i], argument, strlen(argument)) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
