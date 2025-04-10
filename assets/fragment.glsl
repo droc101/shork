@@ -13,7 +13,7 @@ out mediump vec4 COLOR;
 // Albedo texture
 uniform sampler2D ALBEDO_TEXTURE;
 // Overlay texture
-uniform sampler2D VERLAY_TEXTURE;
+uniform sampler2D OVERLAY_TEXTURE;
 // Screen size in pixels/characters
 uniform vec2 SCREEN_SIZE;
 
