@@ -1,12 +1,12 @@
-#include <EGL/egl.h>
 #include <signal.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <EGL/egl.h>
 #include "ansi.h"
+#include "args.h"
 #include "console.h"
 #include "renderer.h"
-#include "args.h"
 
 // Uncomment to allow terminals that do not meet requirements (at least 10x10, 24bit color) to run.
 //#define ALLOW_INVALID_TERMINALS

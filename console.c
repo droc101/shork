@@ -8,8 +8,8 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include "ansi.h"
-#include "stb/stb_sprintf.h"
 #include "renderer.h"
+#include "stb/stb_sprintf.h"
 
 void* framebuffer = NULL;
 char* outputBuffer = NULL;
