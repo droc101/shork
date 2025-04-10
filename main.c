@@ -11,16 +11,23 @@
 // Uncomment to allow terminals that do not meet requirements (at least 10x10, 24bit color) to run.
 //#define ALLOW_INVALID_TERMINALS
 
+// Uncomment to print the average FPS and frametime on exit.
+//#define FPS_BENCHMARK
+
 ivec2 consoleSize = {0, 0};
 bool stop = false;
-long double frames = 0;
+#ifdef FPS_BENCHMARK
 static ulong startTime;
+long double frames = 0;
+#endif
 
 void renderFrame()
 {
     eglDrawFrame();
     consoleDraw(consoleSize);
+#ifdef FPS_BENCHMARK
     frames++;
+#endif
     ivec2 conSize = {0, 0};
     getConsoleSize(conSize);
     if (conSize[0] != consoleSize[0] || conSize[1] != consoleSize[1])
@@ -93,14 +100,18 @@ int main(const int argc, char *argv[])
     if (!consoleInit(consoleSize)) exit(1);
     if (!eglInit(consoleSize, flag)) exit(1);
 
+#ifdef FPS_BENCHMARK
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     startTime = ts.tv_sec * 1000000000 + ts.tv_nsec;
+#endif
 
     while (!stop) renderFrame(); // This can be interrupted by Ctrl+C
 
+#ifdef FPS_BENCHMARK
     clock_gettime(CLOCK_MONOTONIC, &ts);
     const ulong totalTime = ts.tv_sec * 1000000000 + ts.tv_nsec - startTime;
+#endif
 
     eglCleanup();
     consoleCleanup();
@@ -110,7 +121,9 @@ int main(const int argc, char *argv[])
     printf(ANSI_RESET_COLORS "\n"); // Reset colors
     printf(ANSI_CLEAR_SCREEN); // Clear screen
     printf("Goodbye\n");
+#ifdef FPS_BENCHMARK
     printf("Average FPS: %Lf\nAverage MS/frame: %Lf\n", 1000000000 * frames / totalTime, totalTime / (1000000 * frames));
+#endif
     fflush(stdout);
     return 0;
 }
