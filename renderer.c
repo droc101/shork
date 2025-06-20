@@ -193,6 +193,25 @@ bool eglInit(const ivec2 size, const char* overlayTexture)
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+    glBindVertexArray(VBO);
+    const GLint posAttrib = glGetAttribLocation(shaderProgram, "VERTEX");
+    const GLint uvAttrib = glGetAttribLocation(shaderProgram, "VERTEX_UV");
+    const GLint normAttrib = glGetAttribLocation(shaderProgram, "VERTEX_NORMAL");
+    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
+    glVertexAttribPointer(uvAttrib, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+    glEnableVertexAttribArray(posAttrib);
+    glEnableVertexAttribArray(uvAttrib);
+    glEnableVertexAttribArray(normAttrib);
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "PROJECTION"), 1, GL_FALSE, *modelViewProjectionMatrix[0]);
+    glUniform1i(glGetUniformLocation(shaderProgram, "ALBEDO_TEXTURE"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgram, "OVERLAY_TEXTURE"), 1);
+    const vec2 screenSize = {(float)viewport[0], (float)viewport[1]};
+    glUniform2fv(glGetUniformLocation(shaderProgram, "SCREEN_SIZE"), 1, screenSize);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
     const char* renderer = (const char*)glGetString(GL_RENDERER);
     const char* version = (const char*)glGetString(GL_VERSION);
     printf("Renderer: %s\n", renderer);
@@ -262,6 +281,8 @@ GLuint eglCreateShader(const char* filename, const GLenum type)
 
 void eglDrawFrame()
 {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     const ulong ms = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
@@ -269,25 +290,7 @@ void eglDrawFrame()
 
     mat4 modelWorldMatrix = GLM_MAT4_IDENTITY_INIT;
     eglGetModelWorldMatrix(&modelWorldMatrix, rot);
-    glBindVertexArray(VBO);
-    const GLint posAttrib = glGetAttribLocation(shaderProgram, "VERTEX");
-    const GLint uvAttrib = glGetAttribLocation(shaderProgram, "VERTEX_UV");
-    const GLint normAttrib = glGetAttribLocation(shaderProgram, "VERTEX_NORMAL");
-    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
-    glVertexAttribPointer(uvAttrib, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
-    glEnableVertexAttribArray(posAttrib);
-    glEnableVertexAttribArray(uvAttrib);
-    glEnableVertexAttribArray(normAttrib);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "PROJECTION"), 1, GL_FALSE, *modelViewProjectionMatrix[0]);
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "WORLD"), 1, GL_FALSE, modelWorldMatrix[0]);
-    glUniform1i(glGetUniformLocation(shaderProgram, "ALBEDO_TEXTURE"), 0);
-    glUniform1i(glGetUniformLocation(shaderProgram, "OVERLAY_TEXTURE"), 1);
-    const vec2 screenSize = {(float)viewport[0], (float)viewport[1]};
-    glUniform2fv(glGetUniformLocation(shaderProgram, "SCREEN_SIZE"), 1, screenSize);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, (GLsizei)shork->indexCount, GL_UNSIGNED_INT, 0);
     eglSwapBuffers(display, surface);
 }
@@ -338,6 +341,10 @@ bool eglResize(const ivec2 newSize)
 
     free(modelViewProjectionMatrix);
     modelViewProjectionMatrix = eglGetWorldViewMatrix();
+
+    const vec2 screenSize = {(float)viewport[0], (float)viewport[1]};
+    glUniform2fv(glGetUniformLocation(shaderProgram, "SCREEN_SIZE"), 1, screenSize);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "PROJECTION"), 1, GL_FALSE, *modelViewProjectionMatrix[0]);
 
     return true;
 }
