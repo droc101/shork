@@ -9,15 +9,9 @@
 #include <time.h>
 #include <bits/signum-generic.h>
 #include <cglm/cglm.h>
-#include <EGL/egl.h>
 #include <GLES3/gl3.h>
 #include "io.h"
 #include "model_loader.h"
-
-EGLDisplay display;
-EGLSurface surface;
-EGLContext context;
-EGLConfig config;
 
 ivec2 viewport = {0, 0};
 unsigned int VBO = 0;
@@ -27,8 +21,9 @@ GLuint albedo_texture = 0;
 GLuint overlay_texture = 0;
 Model* shork = NULL;
 mat4* modelViewProjectionMatrix = NULL;
+bool useHalfHeight = false;
 
-bool eglLoadTexture(const char* path, GLuint *texture, const bool filter)
+bool loadTexture(const char* path, GLuint *texture, const bool filter)
 {
     Image* img = readImage(path);
     if (img == NULL)
@@ -52,71 +47,19 @@ bool eglLoadTexture(const char* path, GLuint *texture, const bool filter)
     return true;
 }
 
-bool eglInit(const ivec2 size, const char* overlayTexture)
+bool renderInit(const ivec2 size, const char* overlayTexture, const RenderInitFunc init, const bool halfHeight)
 {
+    useHalfHeight = halfHeight;
+
     viewport[0] = size[0];
-    viewport[1] = size[1] * 2;
-
-    display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (display == EGL_NO_DISPLAY)
+    viewport[1] = size[1];
+    if (useHalfHeight)
     {
-        fprintf(stderr, "Failed to get EGL display\n");
-        return false;
+        viewport[1] *= 2;
     }
 
-    if (!eglInitialize(display, NULL, NULL))
+    if (init && !init(viewport))
     {
-        fprintf(stderr, "Failed to initialize EGL\n");
-        return false;
-    }
-
-    const EGLint configAttribs[] = {
-        EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 8,
-        EGL_DEPTH_SIZE, 24,
-        EGL_SAMPLES, 0,
-        EGL_NONE
-    };
-
-    EGLint numConfigs;
-    if (!eglChooseConfig(display, configAttribs, &config, 1, &numConfigs) || numConfigs == 0)
-    {
-        fprintf(stderr, "Failed to choose EGL config\n");
-        return false;
-    }
-    const EGLint pbufferAttribs[] = {
-        EGL_WIDTH, viewport[0],
-        EGL_HEIGHT, viewport[1],
-        EGL_NONE,
-    };
-    surface = eglCreatePbufferSurface(display, config, pbufferAttribs);
-    if (surface == EGL_NO_SURFACE)
-    {
-        fprintf(stderr, "Failed to create EGL Pbuffer surface\n");
-        return false;
-    }
-    if (!eglBindAPI(EGL_OPENGL_ES_API))
-    {
-        fprintf(stderr, "Failed to bind OpenGL ES API\n");
-        return false;
-    }
-    const EGLint contextAttribs[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 3,
-        EGL_NONE
-    };
-    context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribs);
-    if (context == EGL_NO_CONTEXT)
-    {
-        fprintf(stderr, "Failed to create EGL context\n");
-        return false;
-    }
-    if (!eglMakeCurrent(display, surface, surface, context))
-    {
-        fprintf(stderr, "Failed to make EGL context current\n");
         return false;
     }
 
@@ -130,7 +73,7 @@ bool eglInit(const ivec2 size, const char* overlayTexture)
         fprintf(stderr, "Failed to load model\n");
         return false;
     }
-    modelViewProjectionMatrix = eglGetWorldViewMatrix();
+    modelViewProjectionMatrix = renderGetWorldViewMatrix();
     if (modelViewProjectionMatrix == NULL)
     {
         fprintf(stderr, "Failed to get world view matrix\n");
@@ -145,13 +88,13 @@ bool eglInit(const ivec2 size, const char* overlayTexture)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(shork->indexCount * sizeof(uint)), shork->indexData, GL_STATIC_DRAW);
 
-    const GLuint vertexShader = eglCreateShader("assets/vertex.glsl", GL_VERTEX_SHADER);
+    const GLuint vertexShader = renderCreateShader("assets/vertex.glsl", GL_VERTEX_SHADER);
     if (vertexShader == -1)
     {
         fprintf(stderr, "Failed to create vertex shader\n");
         return false;
     }
-    const GLuint fragmentShader = eglCreateShader("assets/fragment.glsl", GL_FRAGMENT_SHADER);
+    const GLuint fragmentShader = renderCreateShader("assets/fragment.glsl", GL_FRAGMENT_SHADER);
     if (fragmentShader == -1)
     {
         fprintf(stderr, "Failed to create fragment shader\n");
@@ -177,8 +120,8 @@ bool eglInit(const ivec2 size, const char* overlayTexture)
     char* flagPath = malloc(flagPathSize);
     snprintf(flagPath, flagPathSize, "assets/flags/%s.png", overlayTexture);
 
-    if (!eglLoadTexture("assets/shork.png", &albedo_texture, true)) return false;
-    if (!eglLoadTexture(flagPath, &overlay_texture, true))
+    if (!loadTexture("assets/shork.png", &albedo_texture, true)) return false;
+    if (!loadTexture(flagPath, &overlay_texture, true))
     {
         fprintf(stderr, "Failed to load flag texture\n");
         free(flagPath);
@@ -220,13 +163,13 @@ bool eglInit(const ivec2 size, const char* overlayTexture)
     return true;
 }
 
-void eglGetModelWorldMatrix(mat4* transformMatrix, const double rotation)
+void renderGetModelWorldMatrix(mat4* transformMatrix, const double rotation)
 {
     glm_mat4_identity(*transformMatrix);
     glm_rotate(*transformMatrix, (float)rotation, (vec3){0, 1, 0});
 }
 
-mat4* eglGetWorldViewMatrix()
+mat4* renderGetWorldViewMatrix()
 {
     vec3 cameraPosition = {0, 0.5f, 3};
     const float aspectRatio = (float)viewport[0] / (float)viewport[1];
@@ -253,7 +196,7 @@ mat4* eglGetWorldViewMatrix()
     return modelViewProjectionMatrix;
 }
 
-GLuint eglCreateShader(const char* filename, const GLenum type)
+GLuint renderCreateShader(const char* filename, const GLenum type)
 {
     const GLchar* shaderSource = readFile(filename);
     if (shaderSource == NULL)
@@ -279,7 +222,7 @@ GLuint eglCreateShader(const char* filename, const GLenum type)
     return shader;
 }
 
-void eglDrawFrame()
+void glRenderFrame(const RenderSwapFunc swap)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -289,58 +232,50 @@ void eglDrawFrame()
     const double rot = (double)ms / 1000.0f;
 
     mat4 modelWorldMatrix = GLM_MAT4_IDENTITY_INIT;
-    eglGetModelWorldMatrix(&modelWorldMatrix, rot);
+    renderGetModelWorldMatrix(&modelWorldMatrix, rot);
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "WORLD"), 1, GL_FALSE, modelWorldMatrix[0]);
     glDrawElements(GL_TRIANGLES, (GLsizei)shork->indexCount, GL_UNSIGNED_INT, 0);
-    eglSwapBuffers(display, surface);
+
+    if (swap) swap();
 }
 
-void eglCleanup()
+void renderCleanup(const RenderCleanupFunc cleanup)
 {
     glDeleteTextures(1, &albedo_texture);
     glDeleteTextures(1, &overlay_texture);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
-    eglDestroySurface(display, surface);
-    eglDestroyContext(display, context);
-    eglTerminate(display);
+
+    if (cleanup) cleanup();
 }
 
-void eglGetFramebuffer(void* buffer)
+void renderGetFramebuffer(void* buffer)
 {
     glReadPixels(0, 0, viewport[0], viewport[1], GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 }
 
-bool eglResize(const ivec2 newSize)
+bool renderResize(const ivec2 newSize, const RenderResizeFunc resize)
 {
     viewport[0] = newSize[0];
-    viewport[1] = newSize[1] * 2;
+    viewport[1] = newSize[1];
+    if (useHalfHeight)
+    {
+        viewport[1] *= 2;
+    }
     glViewport(0, 0, viewport[0], viewport[1]);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glDeleteRenderbuffers(1, &VBO);
     glDeleteFramebuffers(1, &EBO);
-    eglDestroySurface(display, surface);
-    const EGLint pbufferAttribs[] = {
-        EGL_WIDTH, viewport[0],
-        EGL_HEIGHT, viewport[1],
-        EGL_NONE,
-    };
-    surface = eglCreatePbufferSurface(display, config, pbufferAttribs);
-    if (surface == EGL_NO_SURFACE)
+
+    if (resize && !resize(viewport))
     {
-        fprintf(stderr, "Failed to create EGL Pbuffer surface\n");
-        return false;
-    }
-    if (!eglMakeCurrent(display, surface, surface, context))
-    {
-        fprintf(stderr, "Failed to make EGL context current\n");
         return false;
     }
 
     free(modelViewProjectionMatrix);
-    modelViewProjectionMatrix = eglGetWorldViewMatrix();
+    modelViewProjectionMatrix = renderGetWorldViewMatrix();
 
     const vec2 screenSize = {(float)viewport[0], (float)viewport[1]};
     glUniform2fv(glGetUniformLocation(shaderProgram, "SCREEN_SIZE"), 1, screenSize);

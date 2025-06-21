@@ -12,18 +12,31 @@ set(CMAKE_C_FLAGS_RELWITHDEBINFO "-g -O3 -DBUILDSTYLE_DEBUG")
 add_executable(shork main.c
         renderer.c
         renderer.h
-        console.c
-        console.h
+        platform/console/tty.c
+        platform/console/tty.h
         io.c
         io.h
         model_loader.c
         model_loader.h
-        ansi.h
+        platform/console/ansi.h
         args.c
         args.h
+        platform/console/egl.c
+        platform/console/egl.h
+        platform/console/platform_console.c
+        platform/console/platform_console.h
+        platform/platform.h
+        platform/sdl/platform_sdl.c
+        platform/sdl/platform_sdl.h
 )
 
-target_link_libraries(shork -lEGL -lGLESv2 m)
+find_package(SDL3 REQUIRED)
+include_directories(${SDL3_INCLUDE_DIRS})
+
+find_package(GLEW REQUIRED)
+include_directories(${GLEW_INCLUDE_DIRS})
+
+target_link_libraries(shork -lEGL -lGLESv2 m SDL3 ${SDL3_LIBRARY})
 
 add_custom_target(
         copy_assets

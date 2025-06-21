@@ -4,17 +4,17 @@
 
 #define STB_SPRINTF_IMPLEMENTATION
 
-#include "console.h"
+#include "tty.h"
 #include <string.h>
 #include <sys/ioctl.h>
 #include "ansi.h"
-#include "renderer.h"
-#include "stb/stb_sprintf.h"
+#include "../../renderer.h"
+#include "../../stb/stb_sprintf.h"
 
 void* framebuffer = NULL;
 char* outputBuffer = NULL;
 
-void getConsoleSize(ivec2 size)
+void ttyGetSize(ivec2 size)
 {
     struct winsize w;
     if (ioctl(0, TIOCGWINSZ, &w) == -1)
@@ -27,7 +27,7 @@ void getConsoleSize(ivec2 size)
     size[1] = w.ws_row;
 }
 
-bool consoleInit(const ivec2 size)
+bool ttyInit(const ivec2 size)
 {
     framebuffer = malloc(size[0] * size[1] * 8);
     if (framebuffer == NULL)
@@ -51,9 +51,9 @@ bool consoleInit(const ivec2 size)
     return true;
 }
 
-void consoleDraw(const ivec2 viewport)
+void ttyDraw(const ivec2 viewport)
 {
-    eglGetFramebuffer(framebuffer);
+    renderGetFramebuffer(framebuffer);
     char* buf = outputBuffer;
     stbsp_sprintf(buf, ANSI_MOVE_CURSOR_TOP_LEFT); // Move cursor to home position
     buf += strlen(buf);
@@ -77,7 +77,7 @@ void consoleDraw(const ivec2 viewport)
     fflush(stdout);
 }
 
-bool consoleSupportsTrueColor()
+bool ttySupportsTrueColor()
 {
     const char* colorterm = getenv("COLORTERM");
     if (colorterm != NULL)
@@ -90,7 +90,7 @@ bool consoleSupportsTrueColor()
     return false;
 }
 
-void consoleCleanup()
+void ttyCleanup()
 {
     free(framebuffer);
     framebuffer = NULL;
@@ -98,10 +98,10 @@ void consoleCleanup()
     outputBuffer = NULL;
 }
 
-void consoleResize(const ivec2 newSize)
+void ttyResize(const ivec2 newSize)
 {
-    consoleCleanup();
-    if (!consoleInit(newSize))
+    ttyCleanup();
+    if (!ttyInit(newSize))
     {
         fprintf(stderr, "Failed to reinitialize console\n");
         exit(1);

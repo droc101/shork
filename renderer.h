@@ -8,42 +8,35 @@
 #include <cglm/types.h>
 #include <GLES3/gl3.h>
 
-/**
- * Initializes EGL and creates and offscreen framebuffer with 2x the height of the size.
- * @param size The size of the framebuffer.
- * @param overlayTexture
- * @return whether the initialization was successful.
- */
-bool eglInit(const ivec2 size, const char* overlayTexture);
+typedef bool (*RenderResizeFunc)(const ivec2 viewport);
+typedef void (*RenderCleanupFunc)();
+typedef void (*RenderSwapFunc)();
+typedef bool (*RenderInitFunc)(ivec2 viewport);
 
-/**
- * Cleans up EGL resources.
- */
-void eglCleanup();
+bool renderInit(const ivec2 size, const char* overlayTexture, RenderInitFunc init, bool halfHeight);
 
-/**
- * Draw a frame
- */
-void eglDrawFrame();
+void renderCleanup(RenderCleanupFunc cleanup);
+
+void glRenderFrame(RenderSwapFunc swap);
 
 /**
  * Copy the rendered frame to the buffer.
  * @param buffer The buffer to copy the frame to.
  */
-void eglGetFramebuffer(void* buffer);
+void renderGetFramebuffer(void* buffer);
 
 /**
  * Get the model world matrix.
  * @param transformMatrix The transform matrix to be filled.
  * @param rotation The rotation angle in degrees.
  */
-void eglGetModelWorldMatrix(mat4* transformMatrix, double rotation);
+void renderGetModelWorldMatrix(mat4* transformMatrix, double rotation);
 
 /**
  * Get the world view matrix.
  * @return The world view matrix.
  */
-mat4* eglGetWorldViewMatrix();
+mat4* renderGetWorldViewMatrix();
 
 /**
  * Create a shader from a file.
@@ -51,14 +44,9 @@ mat4* eglGetWorldViewMatrix();
  * @param type The type of shader to create.
  * @return The shader ID.
  */
-GLuint eglCreateShader(const char* filename, GLenum type);
+GLuint renderCreateShader(const char* filename, GLenum type);
 
-/**
- * Resize the framebuffer.
- * @param newSize The new size of the framebuffer in characters. Will be doubled in height.
- * @return Whether the resize was successful.
- */
-bool eglResize(const ivec2 newSize);
+bool renderResize(const ivec2 newSize, RenderResizeFunc resize);
 
 /**
  * Get the current viewport size in pixels.

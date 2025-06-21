@@ -1,56 +1,21 @@
 #include <signal.h>
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include <EGL/egl.h>
-#include "ansi.h"
 #include "args.h"
-#include "console.h"
-#include "renderer.h"
+#include "platform/platform.h"
 
-// Uncomment to allow terminals that do not meet requirements (at least 10x10, 24bit color) to run.
-//#define ALLOW_INVALID_TERMINALS
-
-// Uncomment to print the average FPS and frametime on exit.
-//#define FPS_BENCHMARK
-
-ivec2 consoleSize = {0, 0};
-bool stop = false;
-#ifdef FPS_BENCHMARK
-static ulong startTime;
-long double frames = 0;
-#endif
-
-void renderFrame()
-{
-    eglDrawFrame();
-    consoleDraw(consoleSize);
-#ifdef FPS_BENCHMARK
-    frames++;
-#endif
-    ivec2 conSize = {0, 0};
-    getConsoleSize(conSize);
-    if (conSize[0] != consoleSize[0] || conSize[1] != consoleSize[1])
-    {
-        consoleSize[0] = conSize[0];
-        consoleSize[1] = conSize[1];
-        if (!eglResize(consoleSize)) exit(1);
-        consoleResize(consoleSize);
-    }
-}
-
-void handleCtrlC()
-{
-    stop = true;
-}
+PlatformID platform = PLATFORM_CONSOLE;
 
 int main(const int argc, char *argv[])
 {
     if (has_arg(argc, argv, "-h") || has_arg(argc, argv, "--help"))
     {
-        printf("Usage: %s [--flag=<value>]\n", argv[0]);
+        printf("Usage: %s [--flag=<value>] [--platform=<value>]\n", argv[0]);
         printf("Options:\n");
         printf("  --flag=<value>  Set the flag value (default: rainbow)\n");
+        printf("  --platform=[console|sdl]  Set the platform to use (default: console)\n\n");
         printf("Flags should be placed in \"assets/flags\" named <value>.png\n");
         return 0;
     }
@@ -71,59 +36,22 @@ int main(const int argc, char *argv[])
         return 1;
     }
 
-    signal(SIGINT, handleCtrlC);
-
-    getConsoleSize(consoleSize);
-
-    if (consoleSize[0] <= 10 || consoleSize[1] <= 10)
-    {
-#ifdef ALLOW_INVALID_TERMINALS
-        consoleSize[0] = 80;
-        consoleSize[1] = 24;
-#else
-        fprintf(stderr, "Invalid console size: Must be at least 10x10.\n");
-        return 1;
-#endif
-    }
-
-#ifndef ALLOW_INVALID_TERMINALS
-    if (!consoleSupportsTrueColor())
-    {
-        fprintf(stderr, "This terminal does not seem to support 24-bit color.\n");
-        return 1;
-    }
-#endif
-
-
     const char *flag = get_arg(argc, argv, "--flag", "rainbow");
 
-    if (!consoleInit(consoleSize)) exit(1);
-    if (!eglInit(consoleSize, flag)) exit(1);
+    const char *platform_arg = get_arg(argc, argv, "--platform", "console");
+    if (strncmp(platform_arg, "console", strlen("console")) == 0)
+    {
+        platform = PLATFORM_CONSOLE;
+    } else if (strncmp(platform_arg, "sdl", strlen("sdl")) == 0)
+    {
+        platform = PLATFORM_SDL;
+    }
 
-#ifdef FPS_BENCHMARK
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    startTime = ts.tv_sec * 1000000000 + ts.tv_nsec;
-#endif
+    if (!platforms[platform].init(flag)) return 1;
 
-    while (!stop) renderFrame(); // This can be interrupted by Ctrl+C
+    platforms[platform].loop();
 
-#ifdef FPS_BENCHMARK
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    const ulong totalTime = ts.tv_sec * 1000000000 + ts.tv_nsec - startTime;
-#endif
-
-    eglCleanup();
-    consoleCleanup();
-    setvbuf(stdout, NULL, _IONBF, 0);
-    fflush(stdout);
-    printf(ANSI_SHOW_CURSOR); // Show cursor
-    printf(ANSI_RESET_COLORS "\n"); // Reset colors
-    printf(ANSI_CLEAR_SCREEN); // Clear screen
-    printf("Goodbye\n");
-#ifdef FPS_BENCHMARK
-    printf("Average FPS: %Lf\nAverage MS/frame: %Lf\n", 1000000000 * frames / totalTime, totalTime / (1000000 * frames));
-#endif
+    platforms[platform].cleanup();
     fflush(stdout);
     return 0;
 }
